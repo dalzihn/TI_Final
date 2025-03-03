@@ -17,6 +17,6 @@ Our Collaborators:
   <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="150"> 
  </a>
  <a href="https://github.com/dalzihn" target="_blank">
-  <img src="[https://github.com/settings/pr](https://avatars.githubusercontent.com/u/171820713?v=4)" width="150"> 
+  <img src="=https://avatars.githubusercontent.com/u/171820713?v=4" width="150"> 
  </a>
 </p>
