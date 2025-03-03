@@ -7,11 +7,8 @@
 # Contributing
 Our Collaborators:
 <p align="left">
- img {
-  border-radius: 50%;
-}
  <a href="https://github.com/edward1503" target="_blank">
-  <img src="https://avatars.githubusercontent.com/u/142201083?v=4" width="150"> 
+  <img src="https://avatars.githubusercontent.com/u/142201083?v=4" height="auto" width="200" style="border-radius:50%"> 
  </a>
  <a href="https://github.com/Bui-Tien-Hieu" target="_blank">
   <img src="https://avatars.githubusercontent.com/u/187350548?v=4" width="150"> 
