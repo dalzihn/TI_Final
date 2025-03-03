@@ -15,10 +15,10 @@ Our Collaborators:
  </a>
 </p>
 <p>
- <a href="https://github.com/Gabriel-Duong" target="_blank">
-  <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="150"> 
- </a>
  <a href="https://github.com/dalzihn" target="_blank">
   <img src="https://www.pinterest.com/pin/592645632249396074" width="150"> 
+ </a>
+ <a href="https://github.com/Gabriel-Duong" target="_blank">
+  <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="150"> 
  </a>
 </p>
