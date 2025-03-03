@@ -21,6 +21,5 @@ Our Collaborators:
  </a>
 </p>
 
-![test](https://avatars.githubusercontent.com/u/171820713?v=4)
 
 
