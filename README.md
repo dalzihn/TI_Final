@@ -5,11 +5,6 @@
 
 
 # Contributing
-img[src*="#thumbnail"] {
-   width:150px;
-   height:100px;
-}
-![Kitten](https://avatars.githubusercontent.com/u/171820713?v=4#thumbnail) 
 Our Collaborators:
 <p align="left">
  <a href="https://github.com/edward1503" target="_blank">
