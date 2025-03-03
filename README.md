@@ -1,8 +1,8 @@
 # TI_Final
- Implementation of Batch-Normalised LSTM for Stock Market Prediction
+ Implementation of <placeholder> LSTM for Stock Market Prediction
 
 
-
+ 
 
 # Contributing
 Our Collaborators:
