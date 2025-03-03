@@ -8,6 +8,6 @@
 Our Collaborators:
 <p align="left">
  <a href="https://github.com/Gabriel-Duong" target="_blank">
-  <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="100"> 
+  <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="150"> 
  </a>
 </p>
