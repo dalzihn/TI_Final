@@ -6,10 +6,10 @@
 
 # Contributing
 Our Collaborators:
-img {
+<p align="left">
+ img {
   border-radius: 50%;
 }
-<p align="left">
  <a href="https://github.com/edward1503" target="_blank">
   <img src="https://avatars.githubusercontent.com/u/142201083?v=4" width="150"> 
  </a>
