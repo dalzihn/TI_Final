@@ -6,4 +6,8 @@
 
 # Contributing
 Our Collaborators:
-<p align='left'> </p>
+<p align="left">
+ <a href="https://github.com/Gabriel-Duong" target="_blank">
+  <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="50"> 
+ </a>
+</p>
