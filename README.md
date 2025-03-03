@@ -13,7 +13,6 @@ Our Collaborators:
  <a href="https://github.com/Bui-Tien-Hieu" target="_blank">
   <img src="https://avatars.githubusercontent.com/u/187350548?v=4" width="150"> 
  </a>
-</p>
  <a href="https://github.com/Gabriel-Duong" target="_blank">
   <img src="https://avatars.githubusercontent.com/u/112112339?v=4" width="150"> 
  </a>
