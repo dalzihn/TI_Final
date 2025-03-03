@@ -1,5 +1,5 @@
 # TI_Final
- Implementation of <placeholder> LSTM for Stock Market Prediction
+ Implementation of [placeholder] LSTM for Stock Market Prediction
 
 
  
