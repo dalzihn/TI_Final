@@ -3,6 +3,7 @@ import torch.nn
 import torch.utils.data 
 from tqdm.auto import tqdm
 
+#Reference: https://www.learnpytorch.io/05_pytorch_going_modular/
 def train_step(
         model: torch.nn.Module,
         dataloader: torch.utils.data.DataLoader,
