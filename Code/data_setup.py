@@ -5,23 +5,43 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
 def preprocess(data: pd.DataFrame) -> pd.DataFrame:
+    """Preprocesses data
+    
+    Arg:
+        data: a pandas DataFrame
+    
+    Returns:
+        A pandas DataFrame that are preprocessed"""
     preprocessed_data = data
     # Drop the first two rows
     preprocessed_data = preprocessed_data.iloc[2:].reset_index(drop=True)
 
     # Change "Attributes" to "Data"
     preprocessed_data = preprocessed_data.rename({"Attributes" : "Date"}, 
-                                                 axis=1)
+                                             axis=1)
     
     # Chaneg data type
     convert_dict = {"high": float, "low": float, "open" : float, "close": float, 
                     "adjust": float, "volume_match": float, "value_match": float}
     preprocessed_data = preprocessed_data.astype(convert_dict)
 
-    # TODO: Scale values & Encode datetime
+    # TODO: Encode datetime
+    preprocessed_data["Date"] = pd.to_datetime(preprocessed_data["Date"])
+    # sine and cosine transformation of year
+    preprocessed_data["year_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.year) / 365)
+    preprocessed_data["year_cos"] = np.cos((2 * np.pi * preprocessed_data["Date"].dt.year) / 365)
 
+    # sine and cosine transformation of month
+    preprocessed_data["month_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.month) / 12)
+    preprocessed_data["month_cos"] = np.cos((2 * np.pi * preprocessed_data["Date"].dt.month) / 12)
+
+    # sine and cosine transformation of day
+    preprocessed_data["day_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
+    preprocessed_data["day_cos"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
+
+    # Drop date and code column
+    preprocessed_data.drop(["Date", "code"], axis = 1, inplace = True)
     return preprocessed_data
-
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
     def __init__(self, path: os.path, target_col: str):
