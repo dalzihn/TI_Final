@@ -4,10 +4,28 @@ import os
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-class SMP_Dataset(Dataset):
-    """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Market Prediction"""
+def preprocess(data: pd.DataFrame) -> pd.DataFrame:
+    preprocessed_data = data
+    # Drop the first two rows
+    preprocessed_data = preprocessed_data.iloc[2:].reset_index(drop=True)
+
+    # Change "Attributes" to "Data"
+    preprocessed_data = preprocessed_data.rename({"Attributes" : "Date"}, 
+                                                 axis=1)
+    
+    # Chaneg data type
+    convert_dict = {"high": float, "low": float, "open" : float, "close": float, 
+                    "adjust": float, "volume_match": float, "value_match": float}
+    preprocessed_data = preprocessed_data.astype(convert_dict)
+
+    # TODO: Scale values & Encode datetime
+
+    return preprocessed_data
+
+class SPP_Dataset(Dataset):
+    """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
     def __init__(self, path: os.path, target_col: str):
-        self.data = pd.read_csv(path)
+        self.data = preprocess(pd.read_csv(path))
         self.target_col = target_col
 
     def __len__(self):
@@ -19,10 +37,10 @@ class SMP_Dataset(Dataset):
         return torch.tensor(features.iloc[index,:].values), torch.tensor(target[index])
     
 def create_dataloaders(
-        train_path: os.path,
-        test_path: os.path,
-        target_col: str,
-        batch_size: int
+        train_path: os.path = None,
+        test_path: os.path = None,
+        target_col: str = None,
+        batch_size: int = 64
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
     """Creates training and testing DataLoaders
 
@@ -36,25 +54,30 @@ def create_dataloaders(
         batch_size: number of samples in a batch
     
     Returns:
-    A tuple (train_dataloaders, test_dataloaders)."""
+        If one of the paths is None, the function will return Pytorch Dataloader of the path which is not.
+        Otherwise, returns both."""
 
-    #Initialise data
-    train_data = SMP_Dataset(train_path, target_col)
-    test_data = SMP_Dataset(test_path, target_col)
-
-    #Create training and testing DataLoaders
-    train_dataloaders = DataLoader(
-        train_data, 
-        batch_size=batch_size, 
-        shuffle=True)
+    #Initialise dat
+    train_dataloaders = None
+    test_dataloaders = None
+    if train_path: 
+        train_data = SPP_Dataset(train_path, target_col)
+        train_dataloaders = DataLoader(train_data, 
+                                       batch_size=batch_size, 
+                                       shuffle=True)
+        
+    if test_path: 
+        test_data = SPP_Dataset(test_path, target_col)
+        test_dataloaders = DataLoader(test_data,
+                                      batch_size=batch_size,
+                                      shuffle=True)
     
-    test_dataloaders = DataLoader(
-        test_data,
-        batch_size=batch_size,
-        shuffle=True
-    )
 
-    return train_dataloaders, test_dataloaders
-
+    if train_dataloaders and test_dataloaders:
+        return train_dataloaders, test_dataloaders
+    elif train_dataloaders:
+        return train_dataloaders
+    else:
+        return test_dataloaders 
 
     
