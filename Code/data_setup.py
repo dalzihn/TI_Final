@@ -55,7 +55,7 @@ class SPP_Dataset(Dataset):
     def __getitem__(self, index):
         features = self.data.drop(self.target_col, axis = 1).select_dtypes('number')
         target = self.data[self.target_col]
-        return torch.tensor(features.iloc[index,:].values), torch.tensor(target[index])
+        return torch.tensor(features.iloc[index,:].values, dtype=torch.float32), torch.tensor(target[index], dtype=torch.float32)
     
 def create_dataloaders(
         train_path: os.path = None,
