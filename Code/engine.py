@@ -41,7 +41,7 @@ def train_step(
         optimizer.zero_grad()
 
         # Step 4: backpropagation
-        loss.backwards()
+        loss.backward()
 
         # Step 5: optimizer step
         optimizer.step()
@@ -113,11 +113,11 @@ def train(
         In the form {epoch: [training_loss, eval_score]}"""
     #Loop through data to train
     tracking = {}
-    for epoch in tqdm(epochs):
+    for epoch in tqdm(range(epochs)):
         training_loss, eval_score = train_step(model=model, 
-                                              dataloader=train_dataloader, 
-                                              loss_func=loss_func, 
-                                              optimizer=optimizer)
+                                               dataloader=train_dataloader, 
+                                               loss_func=loss_func, 
+                                               optimizer=optimizer)
         tracking[str(epoch)] = [training_loss, eval_score]
     
         print(
@@ -148,8 +148,8 @@ def test(
     tracking = {}
     for epoch in tqdm(epochs):
         testing_loss, eval_score = test_step(model=model, 
-                                              dataloader=test_dataloader, 
-                                              loss_func=loss_func)
+                                             dataloader=test_dataloader, 
+                                             loss_func=loss_func)
         tracking[str(epoch)] = [testing_loss, eval_score]
     
         print(
