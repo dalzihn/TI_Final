@@ -38,7 +38,7 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
 
     # sine and cosine transformation of day
     preprocessed_data["day_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
-    preprocessed_data["day_cos"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
+    preprocessed_data["day_cos"] = np.cos((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
 
     # Drop date and code column
     preprocessed_data.drop(["Date", "code"], axis = 1, inplace = True)
