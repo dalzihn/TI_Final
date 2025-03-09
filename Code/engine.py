@@ -80,6 +80,7 @@ def test_step(
         for batch, (X, y) in enumerate(dataloader):
             # Step 1: forward pass
             y_pred = model(X)
+            y_pred = y_pred.squeeze(dim=1)
 
             # Step 2: calculate loss
             loss = loss_func(y_pred, y)
@@ -87,10 +88,12 @@ def test_step(
 
             # Step 3: calculate evaluation
             eval_score += loss
+        testing_loss = testing_loss.item()
+        eval_score = eval_score.item()
 
     #Normalize metrics  
     testing_loss /= len(dataloader)
-    eval_score = torch.sqrt(eval_score) / len(dataloader)
+    eval_score = (eval_score**(1/2)) / len(dataloader)
     
     return testing_loss, eval_score
 
@@ -132,7 +135,6 @@ def test(
         test_dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
         epochs: int,
-        optimizer: torch.optim.Optimizer
 ) -> torch.nn.Module:
     """Tests a deep learning model via many epochs
     
@@ -147,7 +149,7 @@ def test(
         In the form {epoch: [testing_loss, eval_score]}"""
     #Loop through data to train
     tracking = {}
-    for epoch in tqdm(epochs):
+    for epoch in tqdm(range(epochs)):
         testing_loss, eval_score = test_step(model=model, 
                                              dataloader=test_dataloader, 
                                              loss_func=loss_func)
@@ -155,8 +157,8 @@ def test(
     
         print(
             f"Epoch: {epoch + 1} | "
-            f"Train loss: {testing_loss:.4f}"
-            f"Train evaluation score: {eval_score:.4f}")
+            f"Test loss: {testing_loss:.4f} | "
+            f"Test evaluation score: {eval_score:.4f}")
     return tracking
 
         
