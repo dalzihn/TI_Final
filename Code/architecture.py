@@ -3,6 +3,7 @@ import torch
 #Reference:
 # 1. https://github.com/hellozgy/bnlstm-pytorch
 # 2. https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
+# 3. https://github.com/jihunchoi/recurrent-batch-normalization-pytorch/blob/master/bnlstm.py
 
 class BNLSTMCell(torch.nn.Module):
     """A BNLSTM cell used for internal calculation."""
@@ -23,18 +24,19 @@ class BNLSTMCell(torch.nn.Module):
         self.bn_input = torch.nn.BatchNorm1d(4*hidden_size) 
         self.bn_c = torch.nn.BatchNorm1d(hidden_size)
 
-    def forward(self, *, input: torch.tensor, hc_0: tuple[torch.tensor, torch.tensor]):
+    def forward(self, input: torch.tensor, hc_0: tuple[torch.tensor, torch.tensor]):
         """Performs forward pass 
         
         Args:
-            input: input vector which has shape (batch_size, time_step, feature_size)
+            input: input vector which has shape (batch_size, time_step)
             hc_0: a tuple of the form (previous_hidden_state, previous_cell)
             
         Returns:
             A tuple which contains new hidden state and new cell
             In the form (h_1, c_1)"""
         #Performs matrix multiplication of previous hidden state and input
-        h_0, c_0 = hc_0 #shape [hidden_size]
+        h_0, c_0 = hc_0 #shape [batch_size, hidden_size]
+        
         hidden_trans = torch.matmul(h_0, self.weight_hidden)
         input_trans = torch.matmul(input, self.weight_input)
 
@@ -51,11 +53,10 @@ class BNLSTMCell(torch.nn.Module):
         return h_1, c_1
     
 class BNLSTM(torch.nn.Module):
-    def __init__(self, *, input_size: int, hidden_size: int, output_size: int):
+    def __init__(self, *, input_size: int, hidden_size: int):
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.output_size = output_size
 
         self.bnlstmcell = BNLSTMCell(input_size=input_size,
                                      hidden_size=hidden_size)
@@ -65,32 +66,15 @@ class BNLSTM(torch.nn.Module):
         self.c_0 = torch.nn.Parameter(torch.zeros(1, hidden_size))
 
     def forward(self, input: torch.tensor, hc_0: tuple[torch.tensor, torch.tensor]= None):
-        # input shape: [N, L, H_in] -> [batch_size, sequence length, feature_size] - sequence length: time step
-        # Get batch_size, sequence length and input_size
-        batch_size, time_step, feature_size = input.size()
-        
-        # Initialise hc_0
-        if hc_0 is None:
+        batch_size, input_size = input.size() # input shape: [N, L] -> [batch_size, input_size]
+        if hc_0 is None: # Initialise hc_0
             hc_0 = (self.h_0.repeat(batch_size, 1), self.c_0.repeat(batch_size, 1))
-
-        # Loop through the batch for each time step
-        hiddens = []
-        final_hc = None
-        for t in range(time_step):
-            hc_1 = self.bnlstmcell(input[:, t, :], hc_0)
-            hiddens.append(hc_1[0])
-            hc_0 = hc_1
-
-        # Stack hidden state of each sample
-        hiddens = torch.stack(hiddens, 1)
-
-        #unsqueeze to add the shape of batch_size
-        hc_1 = (hc_1[0].unsqueeze(0), hc_1[1].unsqueeze(0))
-
-        # return hidden_t, hc_0
-        return hiddens, hc_1
+        h_1, c_1 = self.bnlstmcell(input=input,
+                                   hc_0=hc_0)
+        hc_1 = (h_1, c_1)
+        return h_1, hc_1
     
-class SPPArchitecture(torch.nn.Module):
+class SPP(torch.nn.Module):
     """Creates the architecture for Stock Price Prediction
     
     Args:
@@ -102,7 +86,7 @@ class SPPArchitecture(torch.nn.Module):
         super().__init__()
         self.relu = torch.nn.ReLU()
         self.bnlstm = BNLSTM(input_size=input_size,
-                                 hidden_size=hidden_size)
+                             hidden_size=hidden_size)
         self.dropout = torch.nn.Dropout()
         self.linear = torch.nn.Linear(in_features=hidden_size,
                                       out_features=output_shape)
@@ -111,5 +95,5 @@ class SPPArchitecture(torch.nn.Module):
         x = self.relu(x)
         output_bnlstm, hc = self.bnlstm(x)
         output_dropout = self.dropout(output_bnlstm)
-        output_linear = self.linear(torch.permute(output_dropout, (1, 0))) # [batch_size, hidden_size] -> [hidden_size, batch_size]
+        output_linear = self.linear(output_dropout)
         return output_linear
