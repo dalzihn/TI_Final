@@ -72,6 +72,7 @@ class BNLSTM(torch.nn.Module):
         h_1, c_1 = self.bnlstmcell(input=input,
                                    hc_0=hc_0)
         hc_1 = (h_1, c_1)
+
         return h_1, hc_1
     
 class SPP(torch.nn.Module):
