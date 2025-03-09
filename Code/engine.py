@@ -31,6 +31,7 @@ def train_step(
     for batch, (X, y) in enumerate(dataloader):
         # Step 1: forward pass
         y_pred = model(X)
+        y_pred = y_pred.squeeze(dim=1)
 
         # Step 2: calculate loss
         loss = loss_func(y_pred, y)
@@ -122,7 +123,7 @@ def train(
     
         print(
             f"Epoch: {epoch + 1} | "
-            f"Train loss: {training_loss:.4f}"
+            f"Train loss: {training_loss:.4f} | "
             f"Train evaluation score: {eval_score:.4f}")
     return tracking
 
