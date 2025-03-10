@@ -171,7 +171,7 @@ def extractzip():
     # Move contents from "Data Test" to train folder
     stock_data_folder = os.path.join(test_folder, "Data Test")
     if os.path.exists(stock_data_folder):
-        print("[INFO] Moving files from 'Data Test' to train folder")
+        print("[INFO] Moving files from 'Data Test' to test folder")
         # Move all files from stock_data_folder to test_folder
         for file in os.listdir(stock_data_folder):
             src = os.path.join(stock_data_folder, file)
