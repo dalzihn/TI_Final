@@ -1,9 +1,15 @@
 import torch
 import torch.nn
 import torch.utils.data 
+import os
+from datetime import datetime
+import torch.utils.tensorboard
 from tqdm.auto import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
-#Reference: https://www.learnpytorch.io/05_pytorch_going_modular/
+#Reference: 
+# 1. https://www.learnpytorch.io/05_pytorch_going_modular/
+# 2. https://www.learnpytorch.io/07_pytorch_experiment_tracking/
 def train_step(
         model: torch.nn.Module,
         dataloader: torch.utils.data.DataLoader,
@@ -102,7 +108,8 @@ def train(
         train_dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
         epochs: int,
-        optimizer: torch.optim.Optimizer
+        optimizer: torch.optim.Optimizer,
+        writer: torch.utils.tensorboard.writer.SummaryWriter
 ) -> torch.nn.Module:
     """Trains a deep learning model via many epochs
     
@@ -122,12 +129,25 @@ def train(
                                                dataloader=train_dataloader, 
                                                loss_func=loss_func, 
                                                optimizer=optimizer)
-        tracking[str(epoch)] = [training_loss, eval_score]
+        tracking[str(epoch)] = [training_loss.item(), eval_score.item()]
     
         print(
             f"Epoch: {epoch + 1} | "
             f"Train loss: {training_loss:.4f} | "
             f"Train evaluation score: {eval_score:.4f}")
+        
+        # NOTE: Experiment tracking
+        writer.add_scalar(tag="Loss_train",
+                          scalar_value=training_loss,
+                          global_step=epoch)
+        
+        writer.add_scalar(tag="EvaluationScore_train",
+                          scalar_value=eval_score,
+                          global_step=epoch)
+        
+        
+        writer.close()
+
     return tracking
 
 def test(
@@ -135,6 +155,7 @@ def test(
         test_dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
         epochs: int,
+        writer: torch.utils.tensorboard.writer.SummaryWriter,
 ) -> torch.nn.Module:
     """Tests a deep learning model via many epochs
     
@@ -159,9 +180,44 @@ def test(
             f"Epoch: {epoch + 1} | "
             f"Test loss: {testing_loss:.4f} | "
             f"Test evaluation score: {eval_score:.4f}")
+        
+        # NOTE: Experiment tracking
+        writer.add_scalar(tag="Loss_test",
+                          scalar_value=testing_loss,
+                          global_step=epoch)
+        
+        writer.add_scalar(tag="EvaluationScore_test",
+                          scalar_value=eval_score,
+                          global_step=epoch)
+        
+        
+        writer.close()
     return tracking
 
+def create_writer(
+        experiment_name: str,
+        model_name: str,
+        misc: str=None
+)  -> torch.utils.tensorboard.writer.SummaryWriter:
+    """Creates a torch.utils.tensorboard.writer.SummaryWriter for saving results of training/testing model
+
+    The format will be: log/YYYY-MM-DD/experiment_name/model_name/misc
+    Args:
+        experiment_name: name of the experiment
+        model_name: name of the model
+        misc: extra things to be added
         
+    Returns:
+        An instance of torch.utils.tensorboard.writer.SummaryWriter"""
+    
+    time = datetime.now().strftime("%Y-%m-%d")
 
+    if misc:
+        log_dir = os.path.join("..", "log", experiment_name, model_name, misc)
+    else:
+        log_dir = os.path.join("..", "log", experiment_name, model_name)
 
+    print(f"[INFO] An instane of SummaryWriter is created, saving to: {log_dir}")
+
+    return SummaryWriter(log_dir=log_dir)
     
