@@ -6,7 +6,6 @@ import zipfile
 import shutil
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 
 def preprocess(data: pd.DataFrame) -> pd.DataFrame:
     """Preprocesses data
