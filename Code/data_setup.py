@@ -6,6 +6,7 @@ import zipfile
 import shutil
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 def preprocess(data: pd.DataFrame) -> pd.DataFrame:
     """Preprocesses data
@@ -50,6 +51,7 @@ class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
     def __init__(self, path: os.path, target_col: str):
         self.data = pd.read_csv(path, index_col=0)
+        # self.data = preprocess(pd.read_csv(path))
         self.target_col = target_col
 
     def __len__(self):
