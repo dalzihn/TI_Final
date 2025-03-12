@@ -49,7 +49,7 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
     def __init__(self, path: os.path, target_col: str):
-        self.data = preprocess(pd.read_csv(path))
+        self.data = pd.read_csv(path, index_col=0)
         self.target_col = target_col
 
     def __len__(self):
@@ -182,5 +182,32 @@ def extractzip():
         print("[INFO] Removing empty 'Data Test' folder")
         shutil.rmtree(stock_data_folder)
 
+def concat_files(
+        folder_name: str) -> None:
+    """Preprocesses and concatenates all files in a folder
+    
+    Args:
+        folder_name: the name of folder whose files to be preprocessed and concatenated, "train" or "test".
+    """
+    # Set up folder path
+    folder = os.path.join("..","Data", folder_name)
+    list_data = os.listdir(folder)
+    preprocess_data = []
+    # Loop through each dataset and preprocess
+    for file in list_data:
+        data = pd.read_csv(os.path.join(folder, file))
+        data = preprocess(data)
+        preprocess_data.append(data)
+    # Concatenate into one dataset
+    concat_data = pd.concat(preprocess_data, ignore_index=True)
+
+    # Remove file 
+    shutil.rmtree(folder)
+    os.mkdir(folder)
+    print("[INFO] Removed all the files and recreated train folder")
+
+    # Save file
+    concat_data.to_csv(os.path.join(folder, "StockData_" + folder_name + ".csv"))
+    print(f"[INFO] Saved file to {folder_name} folder")
 
     
