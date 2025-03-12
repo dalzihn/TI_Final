@@ -85,6 +85,10 @@ class SPP(torch.nn.Module):
     """
     def __init__(self, input_size: int , hidden_size: int, output_shape: int):
         super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_shape = output_shape
+        
         self.relu = torch.nn.ReLU()
         self.bnlstm = BNLSTM(input_size=input_size,
                              hidden_size=hidden_size)
