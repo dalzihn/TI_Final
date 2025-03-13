@@ -109,7 +109,7 @@ def train(
         loss_func: torch.nn,
         epochs: int,
         optimizer: torch.optim.Optimizer,
-        writer: torch.utils.tensorboard.writer.SummaryWriter
+        writer: torch.utils.tensorboard.writer.SummaryWriter = None
 ) -> torch.nn.Module:
     """Trains a deep learning model via many epochs
     
@@ -137,16 +137,17 @@ def train(
             f"Train evaluation score: {eval_score:.4f}")
         
         # NOTE: Experiment tracking
-        writer.add_scalar(tag="Loss_train",
-                          scalar_value=training_loss,
-                          global_step=epoch)
-        
-        writer.add_scalar(tag="EvaluationScore_train",
-                          scalar_value=eval_score,
-                          global_step=epoch)
-        
-        
-        writer.close()
+        if writer is not None:
+            writer.add_scalar(tag="Loss_train",
+                            scalar_value=training_loss,
+                            global_step=epoch)
+            
+            writer.add_scalar(tag="EvaluationScore_train",
+                            scalar_value=eval_score,
+                            global_step=epoch)
+            
+            
+            writer.close()
 
     return tracking
 
@@ -213,11 +214,29 @@ def create_writer(
     time = datetime.now().strftime("%Y-%m-%d")
 
     if misc:
-        log_dir = os.path.join("..", "log", experiment_name, model_name, misc)
+        log_dir = os.path.join("..", "log", time, experiment_name, model_name, misc)
     else:
-        log_dir = os.path.join("..", "log", experiment_name, model_name)
+        log_dir = os.path.join("..", "log", time, experiment_name, model_name)
 
     print(f"[INFO] An instane of SummaryWriter is created, saving to: {log_dir}")
 
     return SummaryWriter(log_dir=log_dir)
     
+def save_model(
+        model: torch.nn.Module,
+        model_name: str,
+        save_folder: os.path,
+) -> os.path:
+    """Saves a Pytorch model
+    
+    Args:
+        model: the model to be saved
+        model_name: name of the model
+        save_folder: the folder used to store model
+
+    Returns:
+        A os.path which is the path to the model"""
+    path = os.path.join(save_folder, model_name)
+    torch.save(model.state_dict(), path)
+    print(f"[INFO] Model is saved successfully to {path}")
+    return path
