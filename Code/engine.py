@@ -56,7 +56,7 @@ def train_step(
         optimizer.step()
     # Normalize training loss and evaluation score
     training_loss /= len(dataloader)
-    eval_score = torch.sqrt(eval_score) / len(dataloader)
+    eval_score = (eval_score / len(dataloader))**(1/2)
     
     return training_loss, eval_score
 
@@ -104,7 +104,7 @@ def test_step(
 
     #Normalize metrics  
     testing_loss /= len(dataloader)
-    eval_score = (eval_score**(1/2)) / len(dataloader)
+    eval_score = (eval_score / len(dataloader))**(1/2)
     
     return testing_loss, eval_score
 
