@@ -5,6 +5,9 @@ import torch
 # 2. https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
 # 3. https://github.com/jihunchoi/recurrent-batch-normalization-pytorch/blob/master/bnlstm.py
 
+# Set up device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 class BNLSTMCell(torch.nn.Module):
     """A BNLSTM cell used for internal calculation."""
     def __init__(self, *, input_size: int, hidden_size: int):
@@ -13,16 +16,16 @@ class BNLSTMCell(torch.nn.Module):
         self.hidden_size = hidden_size
 
         # Weight matrices for 4 gates: input, forget, cell, output
-        self.weight_hidden = torch.nn.Parameter(torch.randn(hidden_size, 4*hidden_size))
-        self.weight_input = torch.nn.Parameter(torch.randn(input_size, 4*hidden_size))
+        self.weight_hidden = torch.nn.Parameter(torch.randn(hidden_size, 4*hidden_size).to(device))
+        self.weight_input = torch.nn.Parameter(torch.randn(input_size, 4*hidden_size).to(device))
 
         # Initialise bias
-        self.bias = torch.nn.Parameter(torch.zeros(4*hidden_size))
+        self.bias = torch.nn.Parameter(torch.zeros(4*hidden_size).to(device))
 
         # Batch normalization layers
-        self.bn_hidden = torch.nn.BatchNorm1d(4*hidden_size)
-        self.bn_input = torch.nn.BatchNorm1d(4*hidden_size) 
-        self.bn_c = torch.nn.BatchNorm1d(hidden_size)
+        self.bn_hidden = torch.nn.BatchNorm1d(4*hidden_size).to(device)
+        self.bn_input = torch.nn.BatchNorm1d(4*hidden_size).to(device)
+        self.bn_c = torch.nn.BatchNorm1d(hidden_size).to(device)
 
     def forward(self, input: torch.tensor, hc_0: tuple[torch.tensor, torch.tensor]):
         """Performs forward pass 
@@ -62,10 +65,11 @@ class BNLSTM(torch.nn.Module):
                                      hidden_size=hidden_size)
         
         #Initiliase h_0 and c_0 - shape:  [N, H] -> [batch_size, hidden_size]
-        self.h_0 = torch.nn.Parameter(torch.zeros(1, hidden_size))
-        self.c_0 = torch.nn.Parameter(torch.zeros(1, hidden_size))
+        self.h_0 = torch.nn.Parameter(torch.zeros(1, hidden_size).to(device))
+        self.c_0 = torch.nn.Parameter(torch.zeros(1, hidden_size).to(device))
 
     def forward(self, input: torch.tensor, hc_0: tuple[torch.tensor, torch.tensor]= None):
+        input = input.to(device)
         batch_size, input_size = input.size() # input shape: [N, L] -> [batch_size, input_size]
         if hc_0 is None: # Initialise hc_0
             hc_0 = (self.h_0.repeat(batch_size, 1), self.c_0.repeat(batch_size, 1))

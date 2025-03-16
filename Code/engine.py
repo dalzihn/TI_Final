@@ -3,7 +3,6 @@ import torch.nn
 import torch.utils.data 
 import os
 from datetime import datetime
-import torch.utils.tensorboard
 from tqdm.auto import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
@@ -14,7 +13,8 @@ def train_step(
         model: torch.nn.Module,
         dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
-        optimizer: torch.optim.Optimizer
+        optimizer: torch.optim.Optimizer,
+        device: torch.device
 ) -> tuple[float, float]:
     """Performs training step of a model on a single epoch
     
@@ -27,6 +27,7 @@ def train_step(
         A tuple of training loss and evaluation score
         In the form (training_loss, training_evalscore)."""
     # Put model in train mode
+    model.to(device)
     model.train()
 
     # Initialise training loss and evaluation score
@@ -36,6 +37,7 @@ def train_step(
     # Loop through data to train the model
     for batch, (X, y) in enumerate(dataloader):
         # Step 1: forward pass
+        X, y = X.to(device), y.to(device)
         y_pred = model(X)
         y_pred = y_pred.squeeze(dim=1)
 
@@ -62,6 +64,7 @@ def test_step(
         model: torch.nn.Module,
         dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
+        device: torch.device
 ) -> tuple[float, float]:
     """Performs testing step on a single epoch
     Args:
@@ -74,6 +77,7 @@ def test_step(
         In the form (testing_loss, eval_score)"""
     
     # Put model in evaluation mode
+    model.to(device)
     model.eval()
 
     # Initialise testing loss and evaluation score
@@ -84,6 +88,7 @@ def test_step(
     with torch.inference_mode():
         # Loop through data to test model
         for batch, (X, y) in enumerate(dataloader):
+            X, y = X.to(device), y.to(device)
             # Step 1: forward pass
             y_pred = model(X)
             y_pred = y_pred.squeeze(dim=1)
@@ -109,7 +114,8 @@ def train(
         loss_func: torch.nn,
         epochs: int,
         optimizer: torch.optim.Optimizer,
-        writer: torch.utils.tensorboard.writer.SummaryWriter = None
+        device: torch.device,
+        writer: torch.utils.tensorboard.writer.SummaryWriter = None,
 ) -> torch.nn.Module:
     """Trains a deep learning model via many epochs
     
@@ -128,7 +134,8 @@ def train(
         training_loss, eval_score = train_step(model=model, 
                                                dataloader=train_dataloader, 
                                                loss_func=loss_func, 
-                                               optimizer=optimizer)
+                                               optimizer=optimizer,
+                                               device=device)
         tracking[str(epoch)] = [training_loss.item(), eval_score.item()]
     
         print(
@@ -156,6 +163,7 @@ def test(
         test_dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
         epochs: int,
+        device: torch.device,
         writer: torch.utils.tensorboard.writer.SummaryWriter,
 ) -> torch.nn.Module:
     """Tests a deep learning model via many epochs
@@ -174,7 +182,8 @@ def test(
     for epoch in tqdm(range(epochs)):
         testing_loss, eval_score = test_step(model=model, 
                                              dataloader=test_dataloader, 
-                                             loss_func=loss_func)
+                                             loss_func=loss_func,
+                                             device=device)
         tracking[str(epoch)] = [testing_loss, eval_score]
     
         print(
