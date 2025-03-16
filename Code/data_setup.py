@@ -47,6 +47,20 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
                                            / (processed_data['volume_match'].max() - processed_data['volume_match'].min()), 4)
     processed_data['value_match'] = round((processed_data['value_match'] - processed_data['value_match'].min())  
                                           / (processed_data['value_match'].max() - processed_data['volume_match'].min()), 4)
+    
+    # NOTE: Scale high, low, open, adjust cols
+    
+    processed_data['high'] = round((processed_data['high'] - processed_data['high'].min())  
+                                           / (processed_data['high'].max() - processed_data['high'].min()), 4)
+    
+    processed_data['low'] = round((processed_data['low'] - processed_data['low'].min())  
+                                           / (processed_data['low'].max() - processed_data['low'].min()), 4)
+    
+    processed_data['open'] = round((processed_data['open'] - processed_data['open'].min())  
+                                           / (processed_data['open'].max() - processed_data['open'].min()), 4)
+    
+    processed_data['adjust'] = round((processed_data['adjust'] - processed_data['adjust'].min())  
+                                           / (processed_data['adjust'].max() - processed_data['adjust'].min()), 4)
 
     # Drop date and code column
     processed_data.drop(["Date", "code"], axis = 1, inplace = True)
@@ -55,7 +69,7 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
     def __init__(self, path: os.path, target_col: str, num_rows: int):
-        self.data = pd.read_csv(path, index_col=0)[:num_rows]
+        self.data = pd.read_csv(path)
         # self.data = preprocess(pd.read_csv(path))
         self.target_col = target_col
 
