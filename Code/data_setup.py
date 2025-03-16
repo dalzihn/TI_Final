@@ -68,7 +68,7 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
 
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
-    def __init__(self, path: os.path, target_col: str, num_rows: int):
+    def __init__(self, path: os.path, target_col: str):
         self.data = pd.read_csv(path)
         # self.data = preprocess(pd.read_csv(path))
         self.target_col = target_col
@@ -85,7 +85,6 @@ def create_dataloaders(
         train_path: os.path = None,
         test_path: os.path = None,
         target_col: str = None,
-        num_rows: int = 50000,
         batch_size: int = 64
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
     """Creates training and testing DataLoaders
@@ -107,7 +106,7 @@ def create_dataloaders(
     train_dataloaders = None
     test_dataloaders = None
     if train_path: 
-        train_data = SPP_Dataset(train_path, target_col, num_rows)
+        train_data = SPP_Dataset(train_path, target_col)
         train_dataloaders = DataLoader(train_data, 
                                        batch_size=batch_size, 
                                        shuffle=True)
