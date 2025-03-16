@@ -89,16 +89,40 @@ class SPP(torch.nn.Module):
     """
     def __init__(self, input_size: int , hidden_size: int, output_shape: int):
         super().__init__()
-        self.relu = torch.nn.ReLU()
-        self.bnlstm = BNLSTM(input_size=input_size,
+        # First BNLSTM layer
+        self.bnlstm1 = BNLSTM(input_size=input_size,
                              hidden_size=hidden_size)
-        self.dropout = torch.nn.Dropout()
+        self.dropout1 = torch.nn.Dropout(p=0.2)
+
+        # self.transfomer_encoder = torch.nn.TransformerEncoderLayer()
+
+        # Second BNLSTM layer
+        self.bnlstm2 = BNLSTM(input_size=hidden_size,
+                              hidden_size=hidden_size)
+        self.dropout2 = torch.nn.Dropout(p=0.2)
+
+
+        # Third BNLSTM layer
+        self.bnlstm3 = BNLSTM(input_size=hidden_size,
+                              hidden_size=hidden_size)
+        self.dropout3 = torch.nn.Dropout(p=0.2)
+
+
         self.linear = torch.nn.Linear(in_features=hidden_size,
                                       out_features=output_shape)
         
     def forward(self, x: torch.tensor):
-        x = self.relu(x)
-        output_bnlstm, hc = self.bnlstm(x)
-        output_dropout = self.dropout(output_bnlstm)
-        output_linear = self.linear(output_dropout)
+        # First BNLSTM layer
+        x, hc1 = self.bnlstm1(x)
+        x = self.dropout1(x)
+
+        # Second BNLSTM layer
+        x, hc2 = self.bnlstm2(x)
+        x = self.dropout2(x)
+
+        # Third BNLSTM layer
+        x, hc3 = self.bnlstm3(x)
+        x = self.dropout3(x)
+
+        output_linear = self.linear(x)
         return output_linear
