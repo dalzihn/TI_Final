@@ -71,7 +71,7 @@ def create_dataloaders(
         train_path: os.path = None,
         test_path: os.path = None,
         target_col: str = None,
-        num_rows: int = 100000,
+        num_rows: int = 50000,
         batch_size: int = 64
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
     """Creates training and testing DataLoaders
