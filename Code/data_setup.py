@@ -15,36 +15,42 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
     
     Returns:
         A pandas DataFrame that are preprocessed"""
-    preprocessed_data = data
+    processed_data = data
     # Drop the first two rows
-    preprocessed_data = preprocessed_data.iloc[2:].reset_index(drop=True)
+    processed_data = processed_data.iloc[2:].reset_index(drop=True)
 
     # Change "Attributes" to "Data"
-    preprocessed_data = preprocessed_data.rename({"Attributes" : "Date"}, 
+    processed_data = processed_data.rename({"Attributes" : "Date"}, 
                                              axis=1)
     
     # Chaneg data type
     convert_dict = {"high": float, "low": float, "open" : float, "close": float, 
                     "adjust": float, "volume_match": float, "value_match": float}
-    preprocessed_data = preprocessed_data.astype(convert_dict)
+    processed_data = processed_data.astype(convert_dict)
 
-    # TODO: Encode datetime
-    preprocessed_data["Date"] = pd.to_datetime(preprocessed_data["Date"])
+    # NOTE: Encode datetime
+    processed_data["Date"] = pd.to_datetime(processed_data["Date"])
     # sine and cosine transformation of year
-    preprocessed_data["year_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.year) / 365)
-    preprocessed_data["year_cos"] = np.cos((2 * np.pi * preprocessed_data["Date"].dt.year) / 365)
+    processed_data["year_sin"] = round(np.sin((2 * np.pi * processed_data["Date"].dt.year) / 365), 4)
+    processed_data["year_cos"] = round(np.cos((2 * np.pi * processed_data["Date"].dt.year) / 365), 4)
 
     # sine and cosine transformation of month
-    preprocessed_data["month_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.month) / 12)
-    preprocessed_data["month_cos"] = np.cos((2 * np.pi * preprocessed_data["Date"].dt.month) / 12)
+    processed_data["month_sin"] = round(np.sin((2 * np.pi * processed_data["Date"].dt.month) / 12), 4)
+    processed_data["month_cos"] = round(np.cos((2 * np.pi * processed_data["Date"].dt.month) / 12), 4)
 
     # sine and cosine transformation of day
-    preprocessed_data["day_sin"] = np.sin((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
-    preprocessed_data["day_cos"] = np.cos((2 * np.pi * preprocessed_data["Date"].dt.day) / 7)
+    processed_data["day_sin"] = round(np.sin((2 * np.pi * processed_data["Date"].dt.day) / 7), 4)
+    processed_data["day_cos"] = round(np.cos((2 * np.pi * processed_data["Date"].dt.day) / 7), 4)
+
+    # NOTE: Scale volume_match and value_match
+    processed_data['volume_match'] = round((processed_data['volume_match'] - processed_data['volume_match'].min())  
+                                           / (processed_data['volume_match'].max() - processed_data['volume_match'].min()), 4)
+    processed_data['value_match'] = round((processed_data['value_match'] - processed_data['value_match'].min())  
+                                          / (processed_data['value_match'].max() - processed_data['volume_match'].min()), 4)
 
     # Drop date and code column
-    preprocessed_data.drop(["Date", "code"], axis = 1, inplace = True)
-    return preprocessed_data
+    processed_data.drop(["Date", "code"], axis = 1, inplace = True)
+    return processed_data
 
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
