@@ -107,6 +107,17 @@ class SPP(torch.nn.Module):
                               hidden_size=hidden_size)
         self.dropout3 = torch.nn.Dropout(p=0.2)
 
+         # Fourth BNLSTM layer
+        self.bnlstm4 = BNLSTM(input_size=hidden_size,
+                              hidden_size=hidden_size)
+        self.dropout4 = torch.nn.Dropout(p=0.2)
+
+
+         # Fifth BNLSTM layer
+        self.bnlstm5 = BNLSTM(input_size=hidden_size,
+                              hidden_size=hidden_size)
+        self.dropout5 = torch.nn.Dropout(p=0.2)
+
 
         self.linear = torch.nn.Linear(in_features=hidden_size,
                                       out_features=output_shape)
@@ -123,6 +134,14 @@ class SPP(torch.nn.Module):
         # Third BNLSTM layer
         x, hc3 = self.bnlstm3(x)
         x = self.dropout3(x)
+
+        # Fourth BNLSTM layer
+        x, hc4 = self.bnlstm4(x)
+        x = self.dropout4(x)
+
+        # Fifith BNLSTM layer
+        x, hc5 = self.bnlstm5(x)
+        x = self.dropout5(x)
 
         output_linear = self.linear(x)
         return output_linear
