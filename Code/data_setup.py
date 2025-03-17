@@ -55,7 +55,7 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
     def __init__(self, path: os.path, target_col: str):
-        self.data = pd.read_csv(path, index_col=0)[:50000]
+        self.data = pd.read_csv(path, index_col=0)
         # self.data = preprocess(pd.read_csv(path))
         self.target_col = target_col
 
