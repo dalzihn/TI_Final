@@ -55,8 +55,8 @@ def train_step(
         # Step 5: optimizer step
         optimizer.step()
     # Normalize training loss and evaluation score
-    training_loss /= len(dataloader)
-    eval_score = (eval_score / len(dataloader))**(1/2)
+    training_loss /= (len(dataloader)*dataloader.batch_size)
+    eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
     
     return training_loss, eval_score
 
@@ -103,8 +103,8 @@ def test_step(
         eval_score = eval_score.item()
 
     #Normalize metrics  
-    testing_loss /= len(dataloader)
-    eval_score = (eval_score / len(dataloader))**(1/2)
+    testing_loss /= (len(dataloader)*dataloader.batch_size)
+    eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
     
     return testing_loss, eval_score
 
