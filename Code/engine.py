@@ -105,6 +105,9 @@ def test_step(
     #Normalize metrics  
     testing_loss /= (len(dataloader)*dataloader.batch_size)
     eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
+    print(
+        f"Test loss: {testing_loss:.4f} | "
+        f"Test evaluation score: {eval_score:.4f}")
     
     return testing_loss, eval_score
 
@@ -156,52 +159,6 @@ def train(
             
             writer.close()
 
-    return tracking
-
-def test(
-        model: torch.nn.Module,
-        test_dataloader: torch.utils.data.DataLoader,
-        loss_func: torch.nn,
-        epochs: int,
-        device: torch.device,
-        writer: torch.utils.tensorboard.writer.SummaryWriter,
-) -> torch.nn.Module:
-    """Tests a deep learning model via many epochs
-    
-    Args:
-        model: a Pytorch model
-        test_daloader: a Pytorch Dataloader that will be used for testing
-        loss_func: loss function for testing
-        optimizer: optimization technique for testing
-        
-    Returns:
-        A dictionary with epoch as key and testing loss, evaluation score as value 
-        In the form {epoch: [testing_loss, eval_score]}"""
-    #Loop through data to train
-    tracking = {}
-    for epoch in tqdm(range(epochs)):
-        testing_loss, eval_score = test_step(model=model, 
-                                             dataloader=test_dataloader, 
-                                             loss_func=loss_func,
-                                             device=device)
-        tracking[str(epoch)] = [testing_loss, eval_score]
-    
-        print(
-            f"Epoch: {epoch + 1} | "
-            f"Test loss: {testing_loss:.4f} | "
-            f"Test evaluation score: {eval_score:.4f}")
-        
-        # NOTE: Experiment tracking
-        writer.add_scalar(tag="Loss_test",
-                          scalar_value=testing_loss,
-                          global_step=epoch)
-        
-        writer.add_scalar(tag="EvaluationScore_test",
-                          scalar_value=eval_score,
-                          global_step=epoch)
-        
-        
-        writer.close()
     return tracking
 
 def create_writer(
