@@ -92,56 +92,87 @@ class SPP(torch.nn.Module):
         # First BNLSTM layer
         self.bnlstm1 = BNLSTM(input_size=input_size,
                              hidden_size=hidden_size)
-        self.dropout1 = torch.nn.Dropout(p=0.2)
+        
 
         # self.transfomer_encoder = torch.nn.TransformerEncoderLayer()
 
         # Second BNLSTM layer
         self.bnlstm2 = BNLSTM(input_size=hidden_size,
                               hidden_size=hidden_size)
-        self.dropout2 = torch.nn.Dropout(p=0.2)
+        
 
 
         # Third BNLSTM layer
         self.bnlstm3 = BNLSTM(input_size=hidden_size,
                               hidden_size=hidden_size)
-        self.dropout3 = torch.nn.Dropout(p=0.2)
+        
 
          # Fourth BNLSTM layer
         self.bnlstm4 = BNLSTM(input_size=hidden_size,
                               hidden_size=hidden_size)
-        self.dropout4 = torch.nn.Dropout(p=0.2)
+        
 
 
          # Fifth BNLSTM layer
         self.bnlstm5 = BNLSTM(input_size=hidden_size,
                               hidden_size=hidden_size)
-        self.dropout5 = torch.nn.Dropout(p=0.2)
-
+        self.dropout = torch.nn.Dropout(p=0.1)
 
         self.linear = torch.nn.Linear(in_features=hidden_size,
                                       out_features=output_shape)
+
+        # # NOTE: transfomer added
+        # # Transfomer encoder layer
+        # self.transformer_encoder_layer = torch.nn.TransformerEncoderLayer(d_model=input_size,
+        #                                                                   nhead=6,
+        #                                                                   batch_first=True)
+        # self.transformer_encoder = torch.nn.TransformerEncoder(encoder_layer=self.transformer_encoder_layer,
+        #                                                        num_layers=2)
+        
+        # # First BNLSTM layer
+        # self.bnlstm1 = BNLSTM(input_size=input_size,
+        #                      hidden_size=hidden_size)
+
+        # # Second BNLSTM layer
+        # self.bnlstm2 = BNLSTM(input_size=hidden_size,
+        #                       hidden_size=hidden_size)
+
+        # # Third BNLSTM layer
+        # self.bnlstm3 = BNLSTM(input_size=hidden_size,
+        #                       hidden_size=hidden_size)
+        
+        # self.dropout = torch.nn.Dropout(p=0.1)
+
+        # self.linear = torch.nn.Linear(in_features=hidden_size,
+        #                               out_features=output_shape)
+
+        
         
     def forward(self, x: torch.tensor):
         # First BNLSTM layer
         x, hc1 = self.bnlstm1(x)
-        x = self.dropout1(x)
 
         # Second BNLSTM layer
-        x, hc2 = self.bnlstm2(x)
-        x = self.dropout2(x)
+        x, hc2 = self.bnlstm2(x, hc1)
 
         # Third BNLSTM layer
-        x, hc3 = self.bnlstm3(x)
-        x = self.dropout3(x)
+        x, hc3 = self.bnlstm3(x, hc2)
 
         # Fourth BNLSTM layer
-        x, hc4 = self.bnlstm4(x)
-        x = self.dropout4(x)
+        x, hc4 = self.bnlstm4(x, hc3)
 
         # Fifith BNLSTM layer
-        x, hc5 = self.bnlstm5(x)
-        x = self.dropout5(x)
+        x, hc5 = self.bnlstm5(x, hc4)
+        x = self.dropout(x)
 
-        output_linear = self.linear(x)
-        return output_linear
+        output = self.linear(x)
+        return output
+
+        # # NOTE: transfomer
+        # x = self.transformer_encoder(x)
+        # x, hc1 = self.bnlstm1(x)
+        # x, hc2 = self.bnlstm2(x, hc1)
+        # x, hc3 = self.bnlstm3(x, hc2)
+        # x = self.dropout(x)
+        # output = self.linear(x)
+        # return output
