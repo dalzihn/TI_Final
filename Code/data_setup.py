@@ -45,8 +45,22 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
     # NOTE: Scale volume_match and value_match
     processed_data['volume_match'] = round((processed_data['volume_match'] - processed_data['volume_match'].min())  
                                            / (processed_data['volume_match'].max() - processed_data['volume_match'].min()), 4)
+    
     processed_data['value_match'] = round((processed_data['value_match'] - processed_data['value_match'].min())  
-                                          / (processed_data['value_match'].max() - processed_data['volume_match'].min()), 4)
+                                          / (processed_data['value_match'].max() - processed_data['value_match'].min()), 4)
+    
+    # NOTE: Scale high, low, adjust, open cols
+    processed_data['high'] = round((processed_data['high'] - processed_data['high'].min())  
+                                           / (processed_data['high'].max() - processed_data['high'].min()), 4)
+    
+    processed_data['low'] = round((processed_data['low'] - processed_data['low'].min())  
+                                          / (processed_data['low'].max() - processed_data['low'].min()), 4)
+    
+    processed_data['adjust'] = round((processed_data['adjust'] - processed_data['adjust'].min())  
+                                           / (processed_data['adjust'].max() - processed_data['adjust'].min()), 4)
+    
+    processed_data['open'] = round((processed_data['open'] - processed_data['open'].min())  
+                                          / (processed_data['open'].max() - processed_data['open'].min()), 4)
     
     # Drop date and code column
     processed_data.drop(["Date", "code"], axis = 1, inplace = True)
