@@ -83,7 +83,7 @@ def test_step(
     # Initialise testing loss and evaluation score
     testing_loss = 0
     eval_score = 0
-
+    prediction = []
     #Turn on context manager
     with torch.inference_mode():
         # Loop through data to test model
@@ -92,7 +92,7 @@ def test_step(
             # Step 1: forward pass
             y_pred = model(X)
             y_pred = y_pred.squeeze(dim=1)
-
+            prediction.append(y_pred)
             # Step 2: calculate loss
             loss = loss_func(y_pred, y)
             testing_loss += loss
@@ -109,11 +109,58 @@ def test_step(
         f"Test loss: {testing_loss:.4f} | "
         f"Test evaluation score: {eval_score:.4f}")
     
-    return testing_loss, eval_score
+    return prediction, testing_loss, eval_score
+
+def validate_step(
+        model: torch.nn.Module,
+        dataloader: torch.utils.data.DataLoader,
+        loss_func: torch.nn,
+        device: torch.device
+) -> tuple[float, float]:
+    """Performs testing step on a single epoch
+    Args:
+        model: a Pytorch model
+        dataloader: a Pytorch Daloader that will be used for validation
+        loss_func: loss function of validating step
+    
+    Returns:
+        A tuple that shows validating loss and evaluation score
+        In the form (testing_loss, eval_score)"""
+    
+    # Put model in evaluation mode
+    model.to(device)
+    model.eval()
+
+    # Initialise testing loss and evaluation score
+    val_loss = 0
+    eval_score = 0
+    #Turn on context manager
+    with torch.inference_mode():
+        # Loop through data to test model
+        for batch, (X, y) in enumerate(dataloader):
+            X, y = X.to(device), y.to(device)
+            # Step 1: forward pass
+            y_pred = model(X)
+            y_pred = y_pred.squeeze(dim=1)
+            # Step 2: calculate loss
+            loss = loss_func(y_pred, y)
+            val_loss += loss
+
+            # Step 3: calculate evaluation
+            eval_score += loss
+        val_loss = val_loss.item()
+        eval_score = eval_score.item()
+
+    #Normalize metrics  
+    val_loss /= (len(dataloader)*dataloader.batch_size)
+    eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
+    
+    return val_loss, eval_score
 
 def train(
         model: torch.nn.Module,
         train_dataloader: torch.utils.data.DataLoader,
+        validate_dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
         epochs: int,
         optimizer: torch.optim.Optimizer,
@@ -132,19 +179,30 @@ def train(
         A dictionary with epoch as key and training loss, evaluation score as value 
         In the form {epoch: [training_loss, eval_score]}"""
     #Loop through data to train
-    tracking = {}
+    results = {}
+    train_loss = []
+    train_score = []
+    validate_loss = []
+    validate_score = []
     for epoch in tqdm(range(epochs)):
         training_loss, eval_score = train_step(model=model, 
                                                dataloader=train_dataloader, 
                                                loss_func=loss_func, 
                                                optimizer=optimizer,
                                                device=device)
-        tracking[str(epoch)] = [training_loss.item(), eval_score.item()]
+        val_loss, val_score = validate_step(model=model,
+                                            dataloader=validate_dataloader,
+                                            loss_func=loss_func,
+                                            device=device)
+        train_loss.append(training_loss.item())
+        train_score.append(eval_score.item())
+        validate_loss.append(val_loss)
+        validate_score.append(val_score)
     
         print(
             f"Epoch: {epoch + 1} | "
-            f"Train loss: {training_loss:.4f} | "
-            f"Train evaluation score: {eval_score:.4f}")
+            f"Train RMSE: {eval_score:.4f} | "
+            f"Validation RMSE: {val_score:.4f}")
         
         # NOTE: Experiment tracking
         if writer is not None:
@@ -158,8 +216,11 @@ def train(
             
             
             writer.close()
-
-    return tracking
+    results['train_loss'] = train_loss
+    results['train_score'] = train_score
+    results['validate_loss'] = validate_loss
+    results['validate_score'] = validate_score
+    return results
 
 def create_writer(
         experiment_name: str,
