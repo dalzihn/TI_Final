@@ -15,56 +15,48 @@ def preprocess(data: pd.DataFrame) -> pd.DataFrame:
     
     Returns:
         A pandas DataFrame that are preprocessed"""
-    processed_data = data
+    newdf = data
+    newdf = newdf.dropna()
     # Drop the first two rows
-    processed_data = processed_data.iloc[2:].reset_index(drop=True)
+    newdf = newdf.iloc[2:].reset_index(drop=True)
+    newdf = newdf.sort_values(by="Attributes", ignore_index=True)
 
     # Change "Attributes" to "Data"
-    processed_data = processed_data.rename({"Attributes" : "Date"}, 
+    newdf = newdf.rename({"Attributes" : "Date"}, 
                                              axis=1)
-    
     # Chaneg data type
     convert_dict = {"high": float, "low": float, "open" : float, "close": float, 
                     "adjust": float, "volume_match": float, "value_match": float}
-    processed_data = processed_data.astype(convert_dict)
+    newdf = newdf.astype(convert_dict)
 
-    # NOTE: Encode datetime
-    processed_data["Date"] = pd.to_datetime(processed_data["Date"])
-    # sine and cosine transformation of year
-    processed_data["year_sin"] = round(np.sin((2 * np.pi * processed_data["Date"].dt.year) / 365), 4)
-    processed_data["year_cos"] = round(np.cos((2 * np.pi * processed_data["Date"].dt.year) / 365), 4)
-
-    # sine and cosine transformation of month
-    processed_data["month_sin"] = round(np.sin((2 * np.pi * processed_data["Date"].dt.month) / 12), 4)
-    processed_data["month_cos"] = round(np.cos((2 * np.pi * processed_data["Date"].dt.month) / 12), 4)
-
-    # sine and cosine transformation of day
-    processed_data["day_sin"] = round(np.sin((2 * np.pi * processed_data["Date"].dt.day) / 7), 4)
-    processed_data["day_cos"] = round(np.cos((2 * np.pi * processed_data["Date"].dt.day) / 7), 4)
+    # Moving average
+    newdf['close_avg_week'] = newdf['close'].rolling(window=7, min_periods=1).mean()
+    newdf['close_avg_week'] = round(newdf['close_avg'].astype('float'),4)
+    
 
     # NOTE: Scale volume_match and value_match
-    processed_data['volume_match'] = round((processed_data['volume_match'] - processed_data['volume_match'].min())  
-                                           / (processed_data['volume_match'].max() - processed_data['volume_match'].min()), 4)
+    newdf['volume_match'] = round((newdf['volume_match'] - newdf['volume_match'].min())  
+                                           / (newdf['volume_match'].max() - newdf['volume_match'].min()), 4)
     
-    processed_data['value_match'] = round((processed_data['value_match'] - processed_data['value_match'].min())  
-                                          / (processed_data['value_match'].max() - processed_data['value_match'].min()), 4)
+    newdf['value_match'] = round((newdf['value_match'] - newdf['value_match'].min())  
+                                          / (newdf['value_match'].max() - newdf['value_match'].min()), 4)
     
     # NOTE: Scale high, low, adjust, open cols
-    processed_data['high'] = round((processed_data['high'] - processed_data['high'].min())  
-                                           / (processed_data['high'].max() - processed_data['high'].min()), 4)
+    newdf['high'] = round((newdf['high'] - newdf['high'].min())  
+                                           / (newdf['high'].max() - newdf['high'].min()), 4)
     
-    processed_data['low'] = round((processed_data['low'] - processed_data['low'].min())  
-                                          / (processed_data['low'].max() - processed_data['low'].min()), 4)
+    newdf['low'] = round((newdf['low'] - newdf['low'].min())  
+                                          / (newdf['low'].max() - newdf['low'].min()), 4)
     
-    processed_data['adjust'] = round((processed_data['adjust'] - processed_data['adjust'].min())  
-                                           / (processed_data['adjust'].max() - processed_data['adjust'].min()), 4)
+    newdf['adjust'] = round((newdf['adjust'] - newdf['adjust'].min())  
+                                           / (newdf['adjust'].max() - newdf['adjust'].min()), 4)
     
-    processed_data['open'] = round((processed_data['open'] - processed_data['open'].min())  
-                                          / (processed_data['open'].max() - processed_data['open'].min()), 4)
+    newdf['open'] = round((newdf['open'] - newdf['open'].min())  
+                                          / (newdf['open'].max() - newdf['open'].min()), 4)
     
     # Drop date and code column
-    processed_data.drop(["Date", "code"], axis = 1, inplace = True)
-    return processed_data
+    newdf.drop(["Date", "code"], axis = 1, inplace = True)
+    return newdf
 
 class SPP_Dataset(Dataset):
     """A class inherited from torch.utils.data.Dataset for loading CSV file for Stock Price Prediction"""
@@ -84,6 +76,7 @@ class SPP_Dataset(Dataset):
 def create_dataloaders(
         train_path: os.path = None,
         test_path: os.path = None,
+        val_path: os.path = None,
         target_col: str = None,
         batch_size: int = 64
 ) -> tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
@@ -95,6 +88,7 @@ def create_dataloaders(
     Args:
         train_path: path that links to train file 
         test_path: path that links to test file
+        val_path: path that links to validation file
         target_col: the target column
         batch_size: number of samples in a batch
     
@@ -110,6 +104,12 @@ def create_dataloaders(
         train_dataloaders = DataLoader(train_data, 
                                        batch_size=batch_size, 
                                        shuffle=True)
+    
+    if val_path: 
+        val_data = SPP_Dataset(val_path, target_col)
+        val_dataloaders = DataLoader(val_data, 
+                                     batch_size=batch_size, 
+                                     shuffle=True)
         
     if test_path: 
         test_data = SPP_Dataset(test_path, target_col)
@@ -117,19 +117,21 @@ def create_dataloaders(
                                       batch_size=batch_size,
                                       shuffle=True)
     
-
-    if train_dataloaders and test_dataloaders:
+    if train_dataloaders and test_dataloaders and val_dataloaders:
+        return train_dataloaders, val_dataloaders, test_dataloaders
+    elif train_dataloaders and test_dataloaders:
         return train_dataloaders, test_dataloaders
-    elif train_dataloaders:
-        return train_dataloaders
-    else:
-        return test_dataloaders 
+    elif train_dataloaders and val_dataloaders:
+        return train_dataloaders, val_dataloaders
+    elif test_dataloaders and val_dataloaders:
+        return test_dataloaders, val_dataloaders
     
 def extractzip():
     """Set up folder and data for training and testing"""
     # Set up folder
     folder = os.path.join("..", "Data")
     train_folder = os.path.join(folder, "train")
+    val_folder = os.path.join(folder, "validation")
     test_folder = os.path.join(folder, "test")
 
     # Check Data folder
@@ -145,6 +147,13 @@ def extractzip():
     else:
         print(f"[INFO] Did not find {train_folder}, creating one...")
         os.mkdir(train_folder)
+
+    # Check validation folder
+    if os.path.exists(val_folder) and os.path.isdir(val_folder):
+        print(f"[INFO] {val_folder} folder exists")
+    else:
+        print(f"[INFO] Did not find {val_folder}, creating one...")
+        os.mkdir(val_folder)
 
     # Check test folder
     if os.path.exists(test_folder) and os.path.isdir(test_folder):
@@ -163,7 +172,7 @@ def extractzip():
     if os.path.exists(macosx_folder):
         print("[INFO] Removing __MACOSX folder")
         shutil.rmtree(macosx_folder)
-
+ 
     # Move contents from "STOCK PRICE DATA" to train folder
     stock_data_folder = os.path.join(train_folder, "STOCK PRICE DATA")
     if os.path.exists(stock_data_folder):
@@ -178,6 +187,31 @@ def extractzip():
         print("[INFO] Removing empty 'STOCK PRICE DATA' folder")
         shutil.rmtree(stock_data_folder)
     
+     # Extract zip file for training
+    with zipfile.ZipFile(folder + "/val.zip", "r") as zip_val:
+        print("[INFO] Unzipping validation data")
+        zip_val.extractall(val_folder)
+
+    # Remove __MACOSX folder if it exists
+    macosx_folder = os.path.join(val_folder, "__MACOSX")
+    if os.path.exists(macosx_folder):
+        print("[INFO] Removing __MACOSX folder")
+        shutil.rmtree(macosx_folder)
+ 
+    # Move contents from "STOCK PRICE DATA" to val folder
+    stock_data_folder = os.path.join(val_folder, "STOCK PRICE DATA")
+    if os.path.exists(stock_data_folder):
+        print("[INFO] Moving files from 'STOCK PRICE DATA' to val folder")
+        # Move all files from stock_data_folder to val_folder
+        for file in os.listdir(stock_data_folder):
+            src = os.path.join(stock_data_folder, file)
+            dst = os.path.join(val_folder, file)
+            shutil.move(src, dst)
+        
+        # Remove the now empty "STOCK PRICE DATA" folder
+        print("[INFO] Removing empty 'STOCK PRICE DATA' folder")
+        shutil.rmtree(stock_data_folder)
+
     # Extract zip file for testing
     with zipfile.ZipFile(folder + "/test.zip", "r") as zip_test:
         print("[INFO] Unzipping training data")
@@ -208,7 +242,7 @@ def concat_files(
     """Preprocesses and concatenates all files in a folder
     
     Args:
-        folder_name: the name of folder whose files to be preprocessed and concatenated, "train" or "test".
+        folder_name: the name of folder whose files to be preprocessed and concatenated, "train" or "test" or "validation".
     """
     # Set up folder path
     folder = os.path.join("..","Data", folder_name)
@@ -216,9 +250,12 @@ def concat_files(
     preprocess_data = []
     # Loop through each dataset and preprocess
     for file in list_data:
-        data = pd.read_csv(os.path.join(folder, file))
-        data = preprocess(data)
-        preprocess_data.append(data)
+        if file == '.DS_Store':
+            os.remove(os.path.join(folder, file))
+        else: 
+            data = pd.read_csv(os.path.join(folder, file))
+            data = preprocess(data)
+            preprocess_data.append(data)
     # Concatenate into one dataset
     concat_data = pd.concat(preprocess_data, ignore_index=True)
 
