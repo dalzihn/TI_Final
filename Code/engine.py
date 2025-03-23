@@ -105,62 +105,59 @@ def test_step(
     #Normalize metrics  
     testing_loss /= (len(dataloader)*dataloader.batch_size)
     eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
-    print(
-        f"Test loss: {testing_loss:.4f} | "
-        f"Test evaluation score: {eval_score:.4f}")
-    
+
     return prediction, testing_loss, eval_score
 
-def validate_step(
-        model: torch.nn.Module,
-        dataloader: torch.utils.data.DataLoader,
-        loss_func: torch.nn,
-        device: torch.device
-) -> tuple[float, float]:
-    """Performs testing step on a single epoch
-    Args:
-        model: a Pytorch model
-        dataloader: a Pytorch Daloader that will be used for validation
-        loss_func: loss function of validating step
+# def validate_step(
+#         model: torch.nn.Module,
+#         dataloader: torch.utils.data.DataLoader,
+#         loss_func: torch.nn,
+#         device: torch.device
+# ) -> tuple[float, float]:
+#     """Performs testing step on a single epoch
+#     Args:
+#         model: a Pytorch model
+#         dataloader: a Pytorch Daloader that will be used for validation
+#         loss_func: loss function of validating step
     
-    Returns:
-        A tuple that shows validating loss and evaluation score
-        In the form (testing_loss, eval_score)"""
+#     Returns:
+#         A tuple that shows validating loss and evaluation score
+#         In the form (testing_loss, eval_score)"""
     
-    # Put model in evaluation mode
-    model.to(device)
-    model.eval()
+#     # Put model in evaluation mode
+#     model.to(device)
+#     model.eval()
 
-    # Initialise testing loss and evaluation score
-    val_loss = 0
-    eval_score = 0
-    #Turn on context manager
-    with torch.inference_mode():
-        # Loop through data to test model
-        for batch, (X, y) in enumerate(dataloader):
-            X, y = X.to(device), y.to(device)
-            # Step 1: forward pass
-            y_pred = model(X)
-            y_pred = y_pred.squeeze(dim=1)
-            # Step 2: calculate loss
-            loss = loss_func(y_pred, y)
-            val_loss += loss
+#     # Initialise testing loss and evaluation score
+#     val_loss = 0
+#     eval_score = 0
+#     #Turn on context manager
+#     with torch.inference_mode():
+#         # Loop through data to test model
+#         for batch, (X, y) in enumerate(dataloader):
+#             X, y = X.to(device), y.to(device)
+#             # Step 1: forward pass
+#             y_pred = model(X)
+#             y_pred = y_pred.squeeze(dim=1)
+#             # Step 2: calculate loss
+#             loss = loss_func(y_pred, y)
+#             val_loss += loss
 
-            # Step 3: calculate evaluation
-            eval_score += loss
-        val_loss = val_loss.item()
-        eval_score = eval_score.item()
+#             # Step 3: calculate evaluation
+#             eval_score += loss
+#         val_loss = val_loss.item()
+#         eval_score = eval_score.item()
 
-    #Normalize metrics  
-    val_loss /= (len(dataloader)*dataloader.batch_size)
-    eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
+#     #Normalize metrics  
+#     val_loss /= (len(dataloader)*dataloader.batch_size)
+#     eval_score = (eval_score / (len(dataloader)*dataloader.batch_size))**(1/2)
     
-    return val_loss, eval_score
+#     return val_loss, eval_score
 
 def train(
         model: torch.nn.Module,
         train_dataloader: torch.utils.data.DataLoader,
-        validate_dataloader: torch.utils.data.DataLoader,
+        test_dataloader: torch.utils.data.DataLoader,
         loss_func: torch.nn,
         epochs: int,
         optimizer: torch.optim.Optimizer,
@@ -172,54 +169,58 @@ def train(
     Args:
         model: a Pytorch model
         train_daloader: a Pytorch Dataloader that will be used for training
+        test_dataloader: a Pytorch Dataloader that will be used for tesdting
         loss_func: loss function for training
         optimizer: optimization technique for training
         
     Returns:
-        A dictionary with epoch as key and training loss, evaluation score as value 
-        In the form {epoch: [training_loss, eval_score]}"""
+        A dictionary.
+        In the form {"train_loss": [],
+                     "train_score": [],
+                     "test_loss": [],
+                     "test_score": []}."""
     #Loop through data to train
     results = {}
     train_loss = []
     train_score = []
-    validate_loss = []
-    validate_score = []
+    test_loss = []
+    test_score = []
     for epoch in tqdm(range(epochs)):
-        training_loss, eval_score = train_step(model=model, 
-                                               dataloader=train_dataloader, 
-                                               loss_func=loss_func, 
-                                               optimizer=optimizer,
-                                               device=device)
-        val_loss, val_score = validate_step(model=model,
-                                            dataloader=validate_dataloader,
-                                            loss_func=loss_func,
-                                            device=device)
-        train_loss.append(training_loss.item())
-        train_score.append(eval_score.item())
-        validate_loss.append(val_loss)
-        validate_score.append(val_score)
+        train_loss_scalar, train_score_scalar = train_step(model=model, 
+                                                           dataloader=train_dataloader, 
+                                                           loss_func=loss_func, 
+                                                           optimizer=optimizer,
+                                                           device=device)
+        _, test_loss_scalar, test_score_scalar = test_step(model=model,
+                                                           dataloader=test_dataloader,
+                                                           loss_func=loss_func,
+                                                           device=device)
+        train_loss.append(train_loss_scalar.item())
+        train_score.append(train_score_scalar.item())
+        test_loss.append(test_loss_scalar)
+        test_score.append(test_score_scalar)
     
         print(
             f"Epoch: {epoch + 1} | "
-            f"Train RMSE: {eval_score:.4f} | "
-            f"Validation RMSE: {val_score:.4f}")
+            f"Train RMSE: {train_score_scalar:.4f} | "
+            f" Test RMSE: {test_score_scalar:.4f}")
         
         # NOTE: Experiment tracking
         if writer is not None:
             writer.add_scalar(tag="Loss_train",
-                            scalar_value=training_loss,
+                            scalar_value=train_loss,
                             global_step=epoch)
             
-            writer.add_scalar(tag="EvaluationScore_train",
-                            scalar_value=eval_score,
+            writer.add_scalar(tag="Loss_test",
+                            scalar_value=test_loss,
                             global_step=epoch)
             
             
             writer.close()
     results['train_loss'] = train_loss
     results['train_score'] = train_score
-    results['validate_loss'] = validate_loss
-    results['validate_score'] = validate_score
+    results['test_loss'] = test_loss
+    results['test_score'] = test_score
     return results
 
 def create_writer(
