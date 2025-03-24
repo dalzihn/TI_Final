@@ -5,7 +5,7 @@ This is our project of implementing three models, which are LSTM, Transformer-ba
 The repo has two folders, Code and Data:
 - The Code folder contains code for building the three mentioned models. Specifically, the `TI_Final/Code/architecture.py` is the building file of the architectures for models, the `TI_Final/Code/data_setup.ipynb` has functions for setting up folders and data files,
   the `TI_Final/Code/engine.py` consists of functions for training and testing.
-- The Data folder is divided into two smaller modules, 'train' and 'test', 'train' has the data for training while 'test' has the data for testing.
+- The Data folder is divided into two smaller modules, `train` and `test`, `train` has the data for training while `test` has the data for testing.
 # Contributing
 Our Collaborators:
 <p align="left">
