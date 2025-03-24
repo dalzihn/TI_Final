@@ -1,8 +1,5 @@
 # TI_Final
- Implementation of [placeholder] LSTM for Stock Market Prediction
-
-
- 
+Implementation of LSTM, Transformer-based LSTM and Transformer-based GRU for Stock Price Prediction
 
 # Contributing
 Our Collaborators:
