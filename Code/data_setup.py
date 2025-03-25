@@ -260,8 +260,8 @@ def concat_files(
             preprocess_data.append(data)
     # Concatenate into one dataset
     concat_data = pd.concat(preprocess_data, ignore_index=True)
-    concat_data  = pd.get_dummies(concat_data, columns=['code'], dtype=float)
-    concat_data = concat_data.fillna(0.0)
+    # concat_data  = pd.get_dummies(concat_data, columns=['code'], dtype=float)
+    # concat_data = concat_data.fillna(0.0)
 
     # Remove file 
     shutil.rmtree(folder)
