@@ -35,7 +35,6 @@ class TransformerGRU_model(torch.nn.Module):
                                                                num_layers=2)
         
         # Second layer
-        # self.relu2 = torch.nn.ReLU()
         self.gru2 = torch.nn.GRU(input_size=hidden_size,
                                    hidden_size=hidden_size, 
                                    batch_first=True,
@@ -56,7 +55,6 @@ class TransformerGRU_model(torch.nn.Module):
         x = self.transformer_encoder(x)
 
         # Second layer
-        # x = self.relu2(x)
         x, h2 = self.gru2(x, h1)
         x = self.dropout2(x)
         x = x[:, -1, :]
@@ -90,31 +88,6 @@ class LSTM_model(torch.nn.Module):
                                    num_layers=2)
         self.dropout2 = torch.nn.Dropout()
 
-        #   # Third layer
-        # self.relu3 = torch.nn.ReLU()
-        # self.lstm3 = torch.nn.LSTM(input_size=hidden_size,
-        #                            hidden_size=hidden_size, 
-        #                            batch_first=True,
-        #                            num_layers=2)
-        # self.dropout3 = torch.nn.Dropout()
-
-        #  # Fourth layer
-        # self.relu4 = torch.nn.ReLU()
-        # self.lstm4 = torch.nn.LSTM(input_size=hidden_size,
-        #                            hidden_size=hidden_size, 
-        #                            batch_first=True,
-        #                            num_layers=2)
-        # self.dropout4 = torch.nn.Dropout()
-
-        #  # Fifth layer
-        # self.relu5 = torch.nn.ReLU()
-        # self.lstm5 = torch.nn.LSTM(input_size=hidden_size,
-        #                            hidden_size=hidden_size, 
-        #                            batch_first=True,
-        #                            num_layers=2)
-        # self.dropout5 = torch.nn.Dropout()
-
-
         self.linear = torch.nn.Linear(in_features=hidden_size,
                                       out_features=output_shape)
 
@@ -129,21 +102,6 @@ class LSTM_model(torch.nn.Module):
         x = self.relu2(x)
         x, hc2 = self.lstm2(x, hc1)
         x = self.dropout2(x)
-
-        #  # Third layer
-        # x = self.relu3(x)
-        # x, hc3 = self.lstm2(x, hc2)
-        # x = self.dropout3(x)
-
-        #  # Fourth layer
-        # x = self.relu4(x)
-        # x, hc4 = self.lstm4(x, hc3)
-        # x = self.dropout4(x)
-
-        #  # Fifth layer
-        # x = self.relu5(x)
-        # x, hc5 = self.lstm5(x, hc4)
-        # x = self.dropout5(x)
 
         x = x[:, -1, :]
         output = self.linear(x)
@@ -160,9 +118,7 @@ class TransformerLSTM_model(torch.nn.Module):
     def __init__(self, input_size: int , hidden_size: int, output_shape: int):
         super().__init__()       
         # # NOTE: transfomer added
-        # self.pos_encoding = PositionalEncoding(d_model=input_size,
-        #                                        max_len=hidden_size)
-        # Transfomer encoder layer
+      
         self.transformer_encoder_layer = torch.nn.TransformerEncoderLayer(d_model=hidden_size,
                                                                           nhead=16,
                                                                           batch_first=True)
